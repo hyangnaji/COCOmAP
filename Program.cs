@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System;
+using UnityEngine;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 
@@ -319,6 +320,13 @@ namespace MURROR{
                     }
                 }
                 APList.Add(apcd);                    
+            }
+
+            List<List<ComputeData>> revercelistlistcd = new List<List<ComputeData>>();
+            for(int i =0; i<tempcdList.Count; i++){
+                List<ComputeData> revercelist = new List<ComputeData>();
+                revercelist = tempcdList[i].OrderByDescending(x=>x.pd.score).ToList();
+                revercelistlistcd.Add(revercelist);
             }
 
             // 4-3. 각 이미지별 TP와 FP의 누적치 계산
