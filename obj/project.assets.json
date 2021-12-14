@@ -53,11 +53,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\swlee\\Desktop\\testtest\\testtest.csproj",
+      "projectUniqueName": "C:\\Users\\swlee\\Desktop\\210817\\Develop\\Data\\COCOmAP\\testtest.csproj",
       "projectName": "testtest",
-      "projectPath": "C:\\Users\\swlee\\Desktop\\testtest\\testtest.csproj",
+      "projectPath": "C:\\Users\\swlee\\Desktop\\210817\\Develop\\Data\\COCOmAP\\testtest.csproj",
       "packagesPath": "C:\\Users\\swlee\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\swlee\\Desktop\\testtest\\obj\\",
+      "outputPath": "C:\\Users\\swlee\\Desktop\\210817\\Develop\\Data\\COCOmAP\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\swlee\\AppData\\Roaming\\NuGet\\NuGet.Config"

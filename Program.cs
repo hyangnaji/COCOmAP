@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System;
-using UnityEngine;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 
@@ -61,25 +60,28 @@ namespace MURROR{
 
 
  
-    public class TestMAP : MonoBehaviour{  
+    public class Program{  
            //  순서대로 실행
            //  이미지 모두 입력 후에 모든 이미지의 경로를 받는 걸로 바꾸면 됨        
-        public void Main(){
-            string ImagePath = @"C:/Users/swlee/Desktop/mAPTestFolder/000000001700";
-            string ImagePath2 = @"C:/Users/swlee/Desktop/mAPTestFolder/000000004490";
-            string ImagePath3 = @"C:/Users/swlee/Desktop/mAPTestFolder/000000012096";
+        static public void Main(){
             mAPCalculate mAPc = new mAPCalculate();
-            string[] gtlist = new string[3];
-            string[] pdlist = new string[3];
+            List<string> gtlist = new List<string>();
+            List<string> pdlist = new List<string>();
 
-            string gt = mAPc.ImageInputGT(ImagePath);
-            string pd = mAPc.ImageInputPD(ImagePath);
-            gtlist[0] = gt;
-            pdlist[0] = pd;
-            gtlist[1] = mAPc.ImageInputGT(ImagePath2);
-            pdlist[1] = mAPc.ImageInputPD(ImagePath2);
-            gtlist[2] = mAPc.ImageInputGT(ImagePath3);
-            pdlist[2] = mAPc.ImageInputPD(ImagePath3);
+            string gtImagePath = @"C:\Users\swlee\Desktop\210817\Develop\Data\COCOmAP\gt";
+            string pdImagePath = @"C:\Users\swlee\Desktop\210817\Develop\Data\COCOmAP\pd";
+
+            DirectoryInfo di = new DirectoryInfo(gtImagePath);
+            foreach(FileInfo File in di.GetFiles()){
+                string gtfile = File.FullName;
+                gtlist.Add(mAPc.ImageInputGT(gtfile));
+            }
+
+            DirectoryInfo di2 = new DirectoryInfo(pdImagePath);
+            foreach(FileInfo File in di2.GetFiles()){
+                string pdfile = File.FullName;
+                pdlist.Add(mAPc.ImageInputPD(pdfile));
+            }
             
             mAPc.CalculateOKS(gtlist, pdlist);
         }
@@ -104,12 +106,12 @@ namespace MURROR{
         //  순서 1. 이미지 입력 받기 -> 자동으로 같은 폴더내의 같은 이름의 GT.json 찾아 가져와 데이터 넣기
         public string ImageInputGT(string ImagePath){
                 string[] files = {"",};
-                string Path = ImagePath.Substring(0, ImagePath.LastIndexOf('/'));
+                string Path = ImagePath.Substring(0, ImagePath.LastIndexOf('\\'));
                 string ImageName = ImagePath.Substring(Path.Length+1, 12);
                 try{
-                    files = Directory.GetFiles(Path, ImageName+"gt.json", SearchOption.AllDirectories);
+                    files = Directory.GetFiles(Path, ImageName+".json", SearchOption.AllDirectories);
                 }catch(IOException ex){
-                    Debug.Log(ex);
+                    Console.WriteLine(ex);
                 }
                 return files[0];
             }
@@ -117,18 +119,18 @@ namespace MURROR{
         //  순서 2. 측정 입력 받기 -> 서버에서 PD 받아와서 필요한 17개의 포인트만 받아와 데이터 넣기(임시적으로 파일로 대체)
         public string ImageInputPD(string ImagePath){
             string[] files = {"",};
-            string Path = ImagePath.Substring(0, ImagePath.LastIndexOf('/'));
+            string Path = ImagePath.Substring(0, ImagePath.LastIndexOf('\\'));
             string ImageName = ImagePath.Substring(Path.Length+1, 12);
             try{
-                files = Directory.GetFiles(Path, ImageName+"pd.json", SearchOption.AllDirectories);
+                files = Directory.GetFiles(Path, ImageName+".json", SearchOption.AllDirectories);
             }catch(IOException ex){
-                Debug.Log(ex);
+                Console.WriteLine(ex);
             }
             return files[0];
         }
 
         //  순서 3. OKS 계산
-        public void CalculateOKS(string[] gt, string[] pd){
+        public void CalculateOKS(List<string> gt, List<string> pd){
             //filename별 Nose&&Eye데이터를 담는 리스트
             List<List<ComputeData>> listlistcd = new List<List<ComputeData>>();                
             
@@ -331,22 +333,22 @@ namespace MURROR{
 
             // 4-3. 각 이미지별 TP와 FP의 누적치 계산
             // Precision 및 Recall을 계산하기 위해 각각의 키포인트 구조체에 누적된 TP와 FP를 계산하여 담기(0.5, 0.75, 0.9, 0.95순 저장)
-            for(int i =0; i<tempcdList.Count; i++){
+            for(int i =0; i<revercelistlistcd.Count; i++){
                 int[] tp = new int[4];
                 int[] fp = new int[4];                    
-                for(int j =0; j<tempcdList[i].Count; j++){
-                    int flag = (int)tempcdList[i][j].keyname;  
+                for(int j =0; j<revercelistlistcd[i].Count; j++){
+                    int flag = (int)revercelistlistcd[i][j].keyname;  
                     if(flag == i){
-                        ComputeData cd = tempcdList[i][j];
+                        ComputeData cd = revercelistlistcd[i][j];
                         for(int z=0; z<4; z++){
-                            if(tempcdList[i][j].cMatrix[z] == (CONFUSION_MATRIX)Enum.Parse(typeof(CONFUSION_MATRIX), "TP")){
+                            if(revercelistlistcd[i][j].cMatrix[z] == (CONFUSION_MATRIX)Enum.Parse(typeof(CONFUSION_MATRIX), "TP")){
                                 tp[z] += 1;
-                            }else if(tempcdList[i][j].cMatrix[z] == (CONFUSION_MATRIX)Enum.Parse(typeof(CONFUSION_MATRIX), "FP")){
+                            }else if(revercelistlistcd[i][j].cMatrix[z] == (CONFUSION_MATRIX)Enum.Parse(typeof(CONFUSION_MATRIX), "FP")){
                                 fp[z] += 1;
                             }
                             cd.tp[z] = tp[z];
                             cd.fp[z] = fp[z];
-                            tempcdList[i][j] = cd;   
+                            revercelistlistcd[i][j] = cd;   
                         }                                                          
                     }
                 }
@@ -355,13 +357,13 @@ namespace MURROR{
             // 4-4. 각 이미지별 Precision 및 Recall 계산
             // 첫 번째 이미지가 TP가 아닐 경우나 첫 번째로 나오는 TP가 없는 경우 Recall과 Precision이 계산될 수 없으므로 0입력
             // 그렇지 않은 경우는 계산하여 해당 구조체에 Precision 및 Recall을 담아둔다
-            for(int i =0; i<tempcdList.Count; i++){
-                for(int j =0; j<tempcdList[i].Count; j++){
+            for(int i =0; i<revercelistlistcd.Count; i++){
+                for(int j =0; j<revercelistlistcd[i].Count; j++){
                     float[] precision = new float[4];
                     float[] recall = new float[4];
-                    int flag = (int)tempcdList[i][j].keyname;
+                    int flag = (int)revercelistlistcd[i][j].keyname;
                     if(flag==i){
-                        ComputeData cd = tempcdList[i][j];
+                        ComputeData cd = revercelistlistcd[i][j];
                         for(int z = 0; z<4 ; z++){
                             if(cd.tp[z] == 0){
                                 precision[z] = 0.0f;
@@ -372,7 +374,7 @@ namespace MURROR{
                             }
                             cd.precision[z] = precision[z];
                             cd.recall[z] = recall[z];
-                            tempcdList[i][j] = cd;
+                            revercelistlistcd[i][j] = cd;
                         }
                     }
                 }
@@ -381,12 +383,12 @@ namespace MURROR{
             // 4-5. AP값 계산
             // 같은 recall 값일 때는 해당 recall 그룹의 MAX(Precision)으로 계산하여 모두 더한 후에 recall의 Unique 개수만큼 나누어준다
             List<double[]> aplist = new List<double[]>();
-            for(int i=0; i<tempcdList.Count; i++){
+            for(int i=0; i<revercelistlistcd.Count; i++){
                 //Nose, LeftEye, RightEye...
                 double[] sum = new double[4];
                 double[] ap = new double[4];
                 for(int z =0; z<4; z++){
-                    var groups = tempcdList[i].GroupBy(g => g.recall[z]); //그룹화
+                    var groups = revercelistlistcd[i].GroupBy(g => g.recall[z]); //그룹화
                     var maxvalue = groups.Select(a=>a.Max(g=>g.precision[z]));;
                     foreach(var value in maxvalue){
                         sum[z] += value;                            
@@ -414,7 +416,7 @@ namespace MURROR{
                 }
                 map = (double)sum/aplist.Count;
                 // mAP 확인용
-                Debug.Log("mAP(" + index[flag++] + ") : "+ map);
+                Console.WriteLine("mAP(" + index[flag++] + ") : "+ Math.Round(map, 6));
             }
         }
     }
